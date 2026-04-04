@@ -9,13 +9,15 @@ LLM mistakes are cheap. Tool calls are not. Limen deterministically enforces pol
 ```mermaid
 flowchart LR
     Agent["🤖 Agent"]
-    Limen["Limen\n(Deterministic Policy Engine)"]
+    Limen["Limen\n<i>Deterministic Policy Engine</i>"]
 
     Agent <-->|"MCP · API · Webhooks"| Limen
 
-    Limen <--> MCPs["MCP Servers\n(GitHub, Postgres)"]
-    Limen <--> APIs["APIs\n(Stripe, Google Calendar)"]
-    Limen <--> Channels["Bidirectional Channels\n(WhatsApp, Slack, Email)"]
+    Limen <--> MCPs["MCP Servers\n<i>(GitHub, Postgres)</i>"]
+    Limen <--> APIs["APIs\n<i>(Stripe, Google Calendar)</i>"]
+    Limen <--> Channels["Bidirectional Channels\n<i>(WhatsApp, Slack, Email)</i>"]
+
+    style Limen fill:#4f46e5,stroke:#3730a3,color:#fff
 ```
 
 The agent reasons. Limen decides what actually runs. Your agents stay the same — control lives outside.
