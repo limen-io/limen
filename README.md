@@ -60,7 +60,6 @@ Building in public. Coming soon.
 **Stack:** TypeScript · Next.js · PostgreSQL · Drizzle
 
 ---
+Star this repo to get updates.
 
-Star this repo to get updates as we build in public.
-
-Follow along on X: [@andrino_daniel](https://x.com/andrino_daniel)
+Follow along as I build in public on X: [@andrino_daniel](https://x.com/andrino_daniel)
