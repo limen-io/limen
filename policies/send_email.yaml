@@ -1,0 +1,9 @@
+version: 1
+
+rules:
+  - id: deny-email-outside-allowlist
+    description: Block any email recipient outside the local test allowlist
+    when:
+      to:
+        not_in:
+          - allowed@example.com

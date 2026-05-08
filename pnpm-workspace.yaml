@@ -1,0 +1,9 @@
+# pnpm 11+ requires explicit approval for build scripts via `allowBuilds`.
+# These three packages ship native binaries through their postinstall scripts:
+#   biome — Rust-based linter binary
+#   esbuild — Go-based bundler binary (transitive dep of vitest, next)
+#   sharp — libvips image processing binary (transitive dep of next)
+allowBuilds:
+  '@biomejs/biome': true
+  esbuild: true
+  sharp: true
