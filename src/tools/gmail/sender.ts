@@ -46,12 +46,19 @@ function required(name: string): string {
 // RFC 2822 message wrapped in base64url, the format gmail.users.messages.send expects.
 function encodeRfc2822(from: string, params: SendEmailParams): string {
   const lines = [
-    `From: ${from}`,
-    `To: ${params.to.join(', ')}`,
-    `Subject: ${params.subject}`,
+    `From: ${headerValue('from', from)}`,
+    `To: ${params.to.map((to) => headerValue('to', to)).join(', ')}`,
+    `Subject: ${headerValue('subject', params.subject)}`,
     'Content-Type: text/plain; charset=UTF-8',
     '',
     params.body,
   ];
   return Buffer.from(lines.join('\r\n')).toString('base64url');
+}
+
+function headerValue(name: string, value: string): string {
+  if (/[\r\n]/.test(value)) {
+    throw new Error(`${name} must not contain CR or LF`);
+  }
+  return value;
 }
