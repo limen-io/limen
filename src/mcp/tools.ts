@@ -8,12 +8,12 @@ import { handleToolCall } from './handler';
 // minimal — Limen is invisible to the agent by default (strategic-decisions §11,
 // ADR 0003). Operators who want to expose specific restrictions upfront can
 // override the description here.
-export function registerSendEmail(
-  server: McpServer,
+export function registerSendEmailTool(
+  mcpServer: McpServer,
   registry: ToolRegistry,
-  sender: GmailSender,
+  gmailSender: GmailSender,
 ): void {
-  server.registerTool(
+  mcpServer.registerTool(
     'send_email',
     {
       description: 'Send an email via Gmail.',
@@ -24,8 +24,8 @@ export function registerSendEmail(
       },
     },
     async (input) => {
-      const loaded = registry.get('send_email');
-      if (!loaded) {
+      const loadedTool = registry.get('send_email');
+      if (!loadedTool) {
         // No policy file → not exposed. Should not happen if boot succeeded;
         // included as a defensive fallback.
         return {
@@ -35,8 +35,8 @@ export function registerSendEmail(
       }
       const result = await handleToolCall(
         { tool: 'send_email', jsonRpcId: null, params: input },
-        loaded,
-        sender,
+        loadedTool,
+        gmailSender,
       );
       return {
         isError: result.isError,

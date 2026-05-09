@@ -133,5 +133,5 @@ export type AuditEvent = AuditEventBase &
   );
 
 // What the handler provides to the audit logger. The system-generated fields
-// (schemaVersion, eventId, timestamp) are added by record().
+// (schemaVersion, eventId, timestamp) are added by recordAuditEvent().
 export type AuditEventInput = Omit<AuditEvent, 'schemaVersion' | 'eventId' | 'timestamp'>;

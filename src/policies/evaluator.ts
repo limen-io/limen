@@ -1,4 +1,4 @@
-import type { LoadResult } from './loader';
+import type { LoadedTool } from './loader';
 import type { Denial, EngineError, Policy, Predicate, Rule, Scalar, Violation } from './types';
 
 export type EvaluationResult = { decision: 'allow' } | { decision: 'deny'; denials: Denial[] };
@@ -93,7 +93,7 @@ export function evaluate(policy: Policy, params: Record<string, unknown>): Evalu
 
 // Top-level entry point used by the MCP handler. A quarantined Tool short-circuits
 // to `decision: error`; an ok Tool delegates to the pure evaluator.
-export function decide(loadedTool: LoadResult, params: Record<string, unknown>): DecisionResult {
+export function decide(loadedTool: LoadedTool, params: Record<string, unknown>): DecisionResult {
   if (loadedTool.status === 'quarantined') {
     return { decision: 'error', error: loadedTool.error };
   }

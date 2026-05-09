@@ -16,28 +16,28 @@ export function createGmailSender(config: GmailSenderConfig): GmailSender {
 
   return async (params: SendEmailParams) => {
     const raw = encodeRfc2822(config.from, params);
-    const res = await gmail.users.messages.send({
+    const response = await gmail.users.messages.send({
       userId: 'me',
       requestBody: { raw },
     });
-    if (!res.data.id) {
+    if (!response.data.id) {
       throw new Error('Gmail API returned no message id');
     }
-    return { messageId: res.data.id };
+    return { messageId: response.data.id };
   };
 }
 
 // Reads required env vars and builds a real GmailSender. Throws if any is missing.
 export function gmailSenderFromEnv(): GmailSender {
   return createGmailSender({
-    clientId: required('GMAIL_CLIENT_ID'),
-    clientSecret: required('GMAIL_CLIENT_SECRET'),
-    refreshToken: required('GMAIL_REFRESH_TOKEN'),
-    from: required('GMAIL_SENDER'),
+    clientId: requiredEnv('GMAIL_CLIENT_ID'),
+    clientSecret: requiredEnv('GMAIL_CLIENT_SECRET'),
+    refreshToken: requiredEnv('GMAIL_REFRESH_TOKEN'),
+    from: requiredEnv('GMAIL_SENDER'),
   });
 }
 
-function required(name: string): string {
+function requiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required env var: ${name}`);
   return value;

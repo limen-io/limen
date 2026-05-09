@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import type { LoadResult } from '../policies/loader';
+import type { LoadedTool } from '../policies/loader';
 import { handleToolCall } from './handler';
 
 describe('handleToolCall', () => {
@@ -9,12 +9,12 @@ describe('handleToolCall', () => {
 
   test('allow + adapter success → isError false, messageId in structuredContent, audit emitted', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const loadedTool: LoadResult = {
+    const loadedTool: LoadedTool = {
       status: 'ok',
       tool: 'send_email',
       policy: { version: 1, rules: [] }, // no rules → always allow
     };
-    const sender = vi.fn().mockResolvedValue({ messageId: 'gmail-001' });
+    const gmailSender = vi.fn().mockResolvedValue({ messageId: 'gmail-001' });
 
     const result = await handleToolCall(
       {
@@ -23,7 +23,7 @@ describe('handleToolCall', () => {
         params: { to: ['ok@example.com'], subject: 'hello', body: 'test' },
       },
       loadedTool,
-      sender,
+      gmailSender,
     );
 
     expect(result.isError).toBe(false);
@@ -34,7 +34,7 @@ describe('handleToolCall', () => {
       messageId: 'gmail-001',
     });
 
-    expect(sender).toHaveBeenCalledOnce();
+    expect(gmailSender).toHaveBeenCalledOnce();
     expect(logSpy).toHaveBeenCalledOnce();
     const event = JSON.parse(logSpy.mock.calls[0]?.[0] as string);
     expect(event.decision).toBe('allow');
@@ -44,7 +44,7 @@ describe('handleToolCall', () => {
 
   test('deny → adapter is not called, isError true, denials in structuredContent', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const loadedTool: LoadResult = {
+    const loadedTool: LoadedTool = {
       status: 'ok',
       tool: 'send_email',
       policy: {
@@ -57,7 +57,7 @@ describe('handleToolCall', () => {
         ],
       },
     };
-    const sender = vi.fn();
+    const gmailSender = vi.fn();
 
     const result = await handleToolCall(
       {
@@ -66,7 +66,7 @@ describe('handleToolCall', () => {
         params: { to: ['blocked@example.com'], subject: 'hello', body: 'test' },
       },
       loadedTool,
-      sender,
+      gmailSender,
     );
 
     expect(result.isError).toBe(true);
@@ -79,7 +79,7 @@ describe('handleToolCall', () => {
       expect(result.structuredContent.denials[0]?.ruleId).toBe('deny-blocked-recipient');
     }
 
-    expect(sender).not.toHaveBeenCalled();
+    expect(gmailSender).not.toHaveBeenCalled();
     expect(logSpy).toHaveBeenCalledOnce();
     const event = JSON.parse(logSpy.mock.calls[0]?.[0] as string);
     expect(event.decision).toBe('deny');
@@ -88,7 +88,7 @@ describe('handleToolCall', () => {
 
   test('quarantined tool → adapter not called, decision error in structuredContent', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const loadedTool: LoadResult = {
+    const loadedTool: LoadedTool = {
       status: 'quarantined',
       tool: 'send_email',
       error: {
@@ -97,7 +97,7 @@ describe('handleToolCall', () => {
         detail: 'unclosed bracket on line 5',
       },
     };
-    const sender = vi.fn();
+    const gmailSender = vi.fn();
 
     const result = await handleToolCall(
       {
@@ -106,7 +106,7 @@ describe('handleToolCall', () => {
         params: { to: ['ok@example.com'], subject: 'hello', body: 'test' },
       },
       loadedTool,
-      sender,
+      gmailSender,
     );
 
     expect(result.isError).toBe(true);
@@ -119,7 +119,7 @@ describe('handleToolCall', () => {
       expect(result.structuredContent.error.code).toBe('invalid_yaml');
     }
 
-    expect(sender).not.toHaveBeenCalled();
+    expect(gmailSender).not.toHaveBeenCalled();
     expect(logSpy).toHaveBeenCalledOnce();
     const event = JSON.parse(logSpy.mock.calls[0]?.[0] as string);
     expect(event.decision).toBe('error');
@@ -128,12 +128,12 @@ describe('handleToolCall', () => {
 
   test('allow + adapter failure → isError true, decision allow + executed false, AdapterError in structuredContent', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const loadedTool: LoadResult = {
+    const loadedTool: LoadedTool = {
       status: 'ok',
       tool: 'send_email',
       policy: { version: 1, rules: [] },
     };
-    const sender = vi.fn().mockRejectedValue(new Error('Gmail API returned 503'));
+    const gmailSender = vi.fn().mockRejectedValue(new Error('Gmail API returned 503'));
 
     const result = await handleToolCall(
       {
@@ -142,7 +142,7 @@ describe('handleToolCall', () => {
         params: { to: ['ok@example.com'], subject: 'hello', body: 'test' },
       },
       loadedTool,
-      sender,
+      gmailSender,
     );
 
     expect(result.isError).toBe(true);
@@ -156,7 +156,7 @@ describe('handleToolCall', () => {
       expect(result.structuredContent.error.detail).toContain('503');
     }
 
-    expect(sender).toHaveBeenCalledOnce();
+    expect(gmailSender).toHaveBeenCalledOnce();
     expect(logSpy).toHaveBeenCalledOnce();
     const event = JSON.parse(logSpy.mock.calls[0]?.[0] as string);
     expect(event.decision).toBe('allow');
@@ -167,7 +167,7 @@ describe('handleToolCall', () => {
   test('normalizes recipients (trim + lowercase) before evaluation', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     // Allowlist policy: anything outside ok@example.com gets denied.
-    const loadedTool: LoadResult = {
+    const loadedTool: LoadedTool = {
       status: 'ok',
       tool: 'send_email',
       policy: {
@@ -180,7 +180,7 @@ describe('handleToolCall', () => {
         ],
       },
     };
-    const sender = vi.fn().mockResolvedValue({ messageId: 'gmail-002' });
+    const gmailSender = vi.fn().mockResolvedValue({ messageId: 'gmail-002' });
 
     // Agent sends padded uppercase variant. After normalization it should
     // match the allowlist and pass through.
@@ -191,11 +191,11 @@ describe('handleToolCall', () => {
         params: { to: ['  OK@Example.COM  '], subject: 'hello', body: 'test' },
       },
       loadedTool,
-      sender,
+      gmailSender,
     );
 
     expect(result.isError).toBe(false);
     expect(result.structuredContent.decision).toBe('allow');
-    expect(sender).toHaveBeenCalledOnce();
+    expect(gmailSender).toHaveBeenCalledOnce();
   });
 });

@@ -28,7 +28,7 @@ describe('createGmailSender', () => {
 
   test('rejects CR/LF in headers before calling Gmail', async () => {
     sendMock.mockResolvedValue({ data: { id: 'gmail-001' } });
-    const sender = createGmailSender({
+    const gmailSender = createGmailSender({
       clientId: 'client-id',
       clientSecret: 'client-secret',
       refreshToken: 'refresh-token',
@@ -36,7 +36,7 @@ describe('createGmailSender', () => {
     });
 
     await expect(
-      sender({
+      gmailSender({
         to: ['allowed@example.com'],
         subject: 'hello\r\nBcc: outside@example.com',
         body: 'test',
@@ -48,7 +48,7 @@ describe('createGmailSender', () => {
 
   test('allows multiline message bodies', async () => {
     sendMock.mockResolvedValue({ data: { id: 'gmail-001' } });
-    const sender = createGmailSender({
+    const gmailSender = createGmailSender({
       clientId: 'client-id',
       clientSecret: 'client-secret',
       refreshToken: 'refresh-token',
@@ -56,7 +56,7 @@ describe('createGmailSender', () => {
     });
 
     await expect(
-      sender({
+      gmailSender({
         to: ['allowed@example.com'],
         subject: 'hello',
         body: 'line 1\nline 2',

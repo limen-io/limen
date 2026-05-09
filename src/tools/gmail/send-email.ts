@@ -16,10 +16,10 @@ export type GmailSender = (params: SendEmailParams) => Promise<{ messageId: stri
 
 export async function sendEmail(
   params: SendEmailParams,
-  sender: GmailSender,
+  gmailSender: GmailSender,
 ): Promise<AdapterResult> {
   try {
-    const { messageId } = await sender(params);
+    const { messageId } = await gmailSender(params);
     return { status: 'success', result: { messageId } };
   } catch (err) {
     return {

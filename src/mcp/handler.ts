@@ -1,6 +1,6 @@
-import { record } from '../audit/logger';
+import { recordAuditEvent } from '../audit/logger';
 import { decide } from '../policies/evaluator';
-import type { LoadResult } from '../policies/loader';
+import type { LoadedTool } from '../policies/loader';
 import type { AdapterError, Denial, EngineError } from '../policies/types';
 import { type GmailSender, type SendEmailParams, sendEmail } from '../tools/gmail/send-email';
 
@@ -18,7 +18,7 @@ export type StructuredContent =
   | (StructuredContentBase & { decision: 'deny'; executed: false; denials: Denial[] })
   | (StructuredContentBase & { decision: 'error'; executed: false; error: EngineError });
 
-export type CallToolResult = {
+export type ToolCallResult = {
   isError: boolean;
   content: Array<{ type: 'text'; text: string }>;
   structuredContent: StructuredContent;
@@ -39,9 +39,9 @@ function normalize(params: Record<string, unknown>): Record<string, unknown> {
 
 export async function handleToolCall(
   request: ToolCallRequest,
-  loadedTool: LoadResult,
-  sender: GmailSender,
-): Promise<CallToolResult> {
+  loadedTool: LoadedTool,
+  gmailSender: GmailSender,
+): Promise<ToolCallResult> {
   const start = Date.now();
   const params = normalize(request.params);
   const decision = decide(loadedTool, params);
@@ -49,7 +49,7 @@ export async function handleToolCall(
   if (decision.decision === 'deny') {
     const durationMs = Date.now() - start;
     const denials = decision.denials;
-    record({
+    recordAuditEvent({
       tool: request.tool,
       request: { jsonRpcId: request.jsonRpcId, params: request.params },
       decision: 'deny',
@@ -79,7 +79,7 @@ export async function handleToolCall(
 
   if (decision.decision === 'error') {
     const durationMs = Date.now() - start;
-    record({
+    recordAuditEvent({
       tool: request.tool,
       request: { jsonRpcId: request.jsonRpcId, params: request.params },
       decision: 'error',
@@ -108,11 +108,11 @@ export async function handleToolCall(
 
   // At this point decision is narrowed to `allow`. `pending_approval` joins
   // DecisionResult in slice 2 and will need its own branch above.
-  const adapterResult = await sendEmail(params as SendEmailParams, sender);
+  const adapterResult = await sendEmail(params as SendEmailParams, gmailSender);
   const durationMs = Date.now() - start;
 
   if (adapterResult.status === 'failed') {
-    record({
+    recordAuditEvent({
       tool: request.tool,
       request: { jsonRpcId: request.jsonRpcId, params: request.params },
       decision: 'allow',
@@ -141,7 +141,7 @@ export async function handleToolCall(
 
   const messageId = adapterResult.result.messageId;
 
-  record({
+  recordAuditEvent({
     tool: request.tool,
     request: { jsonRpcId: request.jsonRpcId, params: request.params },
     decision: 'allow',

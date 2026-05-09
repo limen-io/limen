@@ -4,7 +4,7 @@ import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 import type { EngineError, Policy } from './types';
 
-export type LoadResult =
+export type LoadedTool =
   | { status: 'ok'; tool: string; policy: Policy }
   | { status: 'quarantined'; tool: string; error: EngineError };
 
@@ -37,7 +37,7 @@ const PolicySchema = z
   })
   .strict();
 
-function quarantine(tool: string, code: string, detail: string): LoadResult {
+function quarantine(tool: string, code: string, detail: string): LoadedTool {
   return {
     status: 'quarantined',
     tool,
@@ -45,7 +45,7 @@ function quarantine(tool: string, code: string, detail: string): LoadResult {
   };
 }
 
-export function loadPolicy(content: string, tool: string): LoadResult {
+export function loadPolicy(content: string, tool: string): LoadedTool {
   let parsed: unknown;
   try {
     parsed = parseYaml(content);
@@ -64,7 +64,7 @@ export function loadPolicy(content: string, tool: string): LoadResult {
 // Loads every *.yaml / *.yml in `directory` as an independent Tool. Tool name
 // is derived from the filename (basename without extension). Non-yaml files
 // are ignored. Results are returned sorted by tool name for determinism.
-export function loadPoliciesFromDir(directory: string): LoadResult[] {
+export function loadPoliciesFromDir(directory: string): LoadedTool[] {
   return readdirSync(directory)
     .filter((file) => file.endsWith('.yaml') || file.endsWith('.yml'))
     .sort((a, b) => a.localeCompare(b))

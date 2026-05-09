@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { decide, evaluate } from './evaluator';
-import type { LoadResult } from './loader';
+import type { LoadedTool } from './loader';
 import type { Policy } from './types';
 
 describe('evaluate', () => {
@@ -236,7 +236,7 @@ describe('evaluate', () => {
 
 describe('decide', () => {
   test('returns error when the tool is quarantined', () => {
-    const quarantined: LoadResult = {
+    const quarantined: LoadedTool = {
       status: 'quarantined',
       tool: 'send_email',
       error: {
@@ -256,7 +256,7 @@ describe('decide', () => {
   });
 
   test('delegates to evaluate when the tool is loaded', () => {
-    const loaded: LoadResult = {
+    const loadedTool: LoadedTool = {
       status: 'ok',
       tool: 'send_email',
       policy: {
@@ -270,7 +270,7 @@ describe('decide', () => {
       },
     };
 
-    const result = decide(loaded, { to: ['blocked@example.com'] });
+    const result = decide(loadedTool, { to: ['blocked@example.com'] });
 
     expect(result.decision).toBe('deny');
     if (result.decision === 'deny') {

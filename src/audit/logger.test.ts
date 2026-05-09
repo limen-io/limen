@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import type { AuditEventInput } from '../policies/types';
-import { record } from './logger';
+import { recordAuditEvent } from './logger';
 
-describe('record', () => {
+describe('recordAuditEvent', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -30,7 +30,7 @@ describe('record', () => {
       durationMs: 12,
     };
 
-    const event = record(input);
+    const event = recordAuditEvent(input);
 
     // Emitted exactly once, as a JSON string parseable back to the same event.
     expect(logSpy).toHaveBeenCalledTimes(1);
