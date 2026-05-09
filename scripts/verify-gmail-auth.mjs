@@ -35,7 +35,9 @@ const refreshToken = env.GMAIL_REFRESH_TOKEN;
 const sender = env.GMAIL_SENDER;
 
 if (!clientId || !clientSecret || !refreshToken || !sender) {
-  console.error('Missing one or more env vars: GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, GMAIL_SENDER');
+  console.error(
+    'Missing one or more env vars: GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, GMAIL_SENDER',
+  );
   process.exit(1);
 }
 
@@ -56,14 +58,19 @@ try {
   console.log('Checking authorized scopes...');
   const info = await oauth2.getTokenInfo(token);
   console.log('Authorized scopes:', info.scopes ?? '(none reported)');
-  console.log('Token expires in:', info.expiry_date ? new Date(info.expiry_date).toISOString() : '(unknown)');
+  console.log(
+    'Token expires in:',
+    info.expiry_date ? new Date(info.expiry_date).toISOString() : '(unknown)',
+  );
 
-  const hasSendScope = (info.scopes ?? []).some((s) =>
-    s === 'https://www.googleapis.com/auth/gmail.send' || s === 'https://mail.google.com/'
+  const hasSendScope = (info.scopes ?? []).some(
+    (s) => s === 'https://www.googleapis.com/auth/gmail.send' || s === 'https://mail.google.com/',
   );
   if (!hasSendScope) {
     console.warn('WARN: gmail.send scope NOT in authorized scopes. Sending will fail.');
-    console.warn('      Re-run the OAuth Playground with `https://www.googleapis.com/auth/gmail.send` in the scope input.');
+    console.warn(
+      '      Re-run the OAuth Playground with `https://www.googleapis.com/auth/gmail.send` in the scope input.',
+    );
     process.exit(2);
   }
 

@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { registerSendEmail } from './mcp/tools';
-import { loadRegistry } from './policies/registry';
 import type { ToolRegistry } from './policies/registry';
+import { loadRegistry } from './policies/registry';
 import type { GmailSender } from './tools/gmail/send-email';
 import { gmailSenderFromEnv } from './tools/gmail/sender';
 
