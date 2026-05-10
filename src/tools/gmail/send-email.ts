@@ -1,4 +1,4 @@
-import type { AdapterError } from '../../policies/types';
+import type { AdapterError } from '../../limen/types';
 
 export type SendEmailParams = {
   to: string[];

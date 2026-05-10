@@ -1,5 +1,13 @@
+import type {
+  Denial,
+  EngineError,
+  Policy,
+  Predicate,
+  Rule,
+  Scalar,
+  Violation,
+} from '../limen/types';
 import type { LoadedTool } from './loader';
-import type { Denial, EngineError, Policy, Predicate, Rule, Scalar, Violation } from './types';
 
 export type EvaluationResult = { decision: 'allow' } | { decision: 'deny'; denials: Denial[] };
 

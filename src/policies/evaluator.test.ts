@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import type { Policy } from '../limen/types';
 import { decide, evaluate } from './evaluator';
 import type { LoadedTool } from './loader';
-import type { Policy } from './types';
 
 describe('evaluate', () => {
   // ─── Baseline ──────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
-import type { EngineError, Policy } from './types';
+import type { EngineError, Policy } from '../limen/types';
 
 export type LoadedTool =
   | { status: 'ok'; tool: string; policy: Policy }

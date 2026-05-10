@@ -57,6 +57,8 @@ function encodeRfc2822(from: string, params: SendEmailParams): string {
 }
 
 function headerValue(name: string, value: string): string {
+  // Prevent RFC 2822 header injection, e.g. `Subject: hi\r\nBcc: ...`.
+  // The body may be multiline; only header values are constrained here.
   if (/[\r\n]/.test(value)) {
     throw new Error(`${name} must not contain CR or LF`);
   }

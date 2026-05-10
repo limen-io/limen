@@ -1,5 +1,5 @@
 import { ulid } from 'ulid';
-import type { AuditEvent, AuditEventInput } from '../policies/types';
+import type { AuditEvent, AuditEventInput } from '../limen/types';
 
 // Builds an AuditEvent by adding system fields (schemaVersion, eventId,
 // timestamp) and emits it as one JSON Lines record on stdout. Slice 1 has no

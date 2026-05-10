@@ -1,4 +1,4 @@
-// Slice 1 domain types for the Limen Policy engine.
+// Slice 1 domain types for Limen.
 // Mirrors first-slice.md sections 3 ("Modelo de policy", "Formato de resposta",
 // "AuditEvent canônico", "Operadores e gramática") and strategic-decisions §14.
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import type { AuditEventInput } from '../policies/types';
+import type { AuditEventInput } from '../limen/types';
 import { recordAuditEvent } from './logger';
 
 describe('recordAuditEvent', () => {
