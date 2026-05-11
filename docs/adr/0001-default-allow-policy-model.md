@@ -6,7 +6,7 @@ The IAM/Cedar/OPA convention is default-deny because their universe of actions e
 
 ## Consequences
 
-- The engine never emits an `allow` verdict; all Rules use `effect: deny`.
+- The engine never emits an `allow` verdict. Every Rule under `rules:` is implicitly deny; there is no `effect:` field in the Rule grammar.
 - There is no precedence between allow and deny to resolve.
 - Param-level restriction is available via `allow_when` syntactic sugar, which desugars to `deny when not X` at load time. The engine remains deny-only.
 - Operators write Rules in negative form ("block when X") or sugared positive form ("permit only when X"); both produce the same internal representation.

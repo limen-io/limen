@@ -13,7 +13,7 @@ The configuration that restricts a Tool. One Policy per Tool, stored in `policie
 _Avoid_: ruleset, config
 
 **Rule**:
-A single deny clause inside a Policy, with `id`, `effect`, `when`. A Policy contains many Rules.
+A single deny clause inside a Policy, with `id`, `when`, and an optional `description`. Every Rule is implicitly deny; there is no `effect` field. A Policy contains many Rules.
 _Avoid_: statement, clause
 
 **Policy engine**:
