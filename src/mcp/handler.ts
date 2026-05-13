@@ -99,8 +99,8 @@ export async function handleToolCall(
     };
   }
 
-  // Decision is `allow`. `pending_approval` joins this union in slice 3 and
-  // will need its own branch above.
+  // Decision is `allow`. `pending_approval` will join this union in a future
+  // iteration and will need its own branch above.
   const adapterResult = await loadedTool.adapter(normalizedParams);
   const durationMs = Date.now() - start;
 

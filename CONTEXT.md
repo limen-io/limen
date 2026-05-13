@@ -41,7 +41,7 @@ A named function from a closed set defined in `src/tools/normalizers.ts` (`trim`
 _Avoid_: normalizer (the verb), filter, transform
 
 **Audit event**:
-A single structured record describing one Tool call's full journey through the engine. Emitted as JSON Lines on stdout through slice 2; persisted from slice 3 onward. Captures the raw params the agent sent, regardless of any normalization applied downstream.
+A single structured record describing one Tool call's full journey through the engine. Emitted as JSON Lines on stdout (at some point will be persisted). Captures the raw params the agent sent, regardless of any normalization applied downstream.
 _Avoid_: log entry, trace, span
 
 ## Relationships

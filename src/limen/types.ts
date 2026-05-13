@@ -20,7 +20,7 @@ export type WhenClause = Record<string, Predicate>;
 
 // Every Rule under `rules:` is implicitly deny; the condition lives under
 // `deny_when:` so the verb sits next to the condition it qualifies (ADR 0001).
-// `allow_when:` (positive sugar) is reserved for slice 3+ and will desugar
+// `allow_when:` (positive sugar) will be implemented in the future and desugar
 // to `deny_when not X` at load time, leaving the engine deny-only forever.
 export type Rule = {
   id: string;
@@ -104,33 +104,33 @@ type AuditEventBase = {
 export type AuditEvent = AuditEventBase &
   (
     | {
-        decision: 'allow';
-        executed: boolean;
-        execution: AdapterResult;
-        denials: null;
-        error: null;
-      }
+      decision: 'allow';
+      executed: boolean;
+      execution: AdapterResult;
+      denials: null;
+      error: null;
+    }
     | {
-        decision: 'deny';
-        executed: false;
-        denials: Denial[];
-        execution: null;
-        error: null;
-      }
+      decision: 'deny';
+      executed: false;
+      denials: Denial[];
+      execution: null;
+      error: null;
+    }
     | {
-        decision: 'pending_approval';
-        executed: false;
-        denials: null;
-        execution: null;
-        error: null;
-      }
+      decision: 'pending_approval';
+      executed: false;
+      denials: null;
+      execution: null;
+      error: null;
+    }
     | {
-        decision: 'error';
-        executed: false;
-        denials: null;
-        execution: null;
-        error: EngineError;
-      }
+      decision: 'error';
+      executed: false;
+      denials: null;
+      execution: null;
+      error: EngineError;
+    }
   );
 
 // What the handler provides to the audit logger. The system-generated fields
