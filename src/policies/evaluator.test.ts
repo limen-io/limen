@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import type { Policy } from '../limen/types';
 import { decide, evaluate } from './evaluator';
-import type { LoadedTool } from './loader';
+import type { LoadedPolicy } from './loader';
 
 describe('evaluate', () => {
   // ─── Baseline ──────────────────────────────────────────────────────────
@@ -236,9 +236,8 @@ describe('evaluate', () => {
 
 describe('decide', () => {
   test('returns error when the tool is quarantined', () => {
-    const quarantined: LoadedTool = {
+    const quarantined: LoadedPolicy = {
       status: 'quarantined',
-      tool: 'send_email',
       error: {
         type: 'engine_error',
         code: 'invalid_yaml',
@@ -255,10 +254,17 @@ describe('decide', () => {
     }
   });
 
-  test('delegates to evaluate when the tool is loaded', () => {
-    const loadedTool: LoadedTool = {
+  test('returns allow when the policy is missing (ADR 0008 default-allow)', () => {
+    const missing: LoadedPolicy = { status: 'missing' };
+
+    const result = decide(missing, { to: ['anything@example.com'] });
+
+    expect(result.decision).toBe('allow');
+  });
+
+  test('delegates to evaluate when the policy is loaded', () => {
+    const loadedPolicy: LoadedPolicy = {
       status: 'ok',
-      tool: 'send_email',
       policy: {
         version: 1,
         rules: [
@@ -270,7 +276,7 @@ describe('decide', () => {
       },
     };
 
-    const result = decide(loadedTool, { to: ['blocked@example.com'] });
+    const result = decide(loadedPolicy, { to: ['blocked@example.com'] });
 
     expect(result.decision).toBe('deny');
     if (result.decision === 'deny') {

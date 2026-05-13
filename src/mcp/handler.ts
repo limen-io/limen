@@ -1,8 +1,8 @@
 import { recordAuditEvent } from '../audit/logger';
 import type { AdapterError, Denial, EngineError } from '../limen/types';
 import { decide } from '../policies/evaluator';
-import type { LoadedTool } from '../policies/loader';
-import { type GmailSender, type SendEmailParams, sendEmail } from '../tools/gmail/send-email';
+import { applyNormalize } from '../tools/normalizers';
+import type { LoadedTool } from '../tools/types';
 
 export type ToolCallRequest = {
   tool: string;
@@ -12,8 +12,15 @@ export type ToolCallRequest = {
 
 type StructuredContentBase = { tool: string };
 
+// `result` is the generic adapter payload (`{ messageId }` for send_email,
+// `{ draftId }` for draft_reply, anything else for future Tools). The handler
+// is intentionally tool-agnostic and does not look inside.
 export type StructuredContent =
-  | (StructuredContentBase & { decision: 'allow'; executed: true; messageId: string })
+  | (StructuredContentBase & {
+      decision: 'allow';
+      executed: true;
+      result: Record<string, unknown>;
+    })
   | (StructuredContentBase & { decision: 'allow'; executed: false; error: AdapterError })
   | (StructuredContentBase & { decision: 'deny'; executed: false; denials: Denial[] })
   | (StructuredContentBase & { decision: 'error'; executed: false; error: EngineError });
@@ -24,27 +31,13 @@ export type ToolCallResult = {
   structuredContent: StructuredContent;
 };
 
-// Slice 1 normalization: trim+lowercase string elements of `to` array, since
-// email addresses are case-insensitive and stray whitespace is a common agent
-// mistake. Other fields are passed through. When the second tool arrives
-// with a different normalization need, this becomes a per-tool dispatch.
-function normalize(params: Record<string, unknown>): Record<string, unknown> {
-  const to = params.to;
-  if (!Array.isArray(to)) return params;
-  return {
-    ...params,
-    to: to.map((v) => (typeof v === 'string' ? v.trim().toLowerCase() : v)),
-  };
-}
-
 export async function handleToolCall(
   request: ToolCallRequest,
   loadedTool: LoadedTool,
-  gmailSender: GmailSender,
 ): Promise<ToolCallResult> {
   const start = Date.now();
-  const params = normalize(request.params);
-  const decision = decide(loadedTool, params);
+  const normalizedParams = applyNormalize(request.params, loadedTool.definition.normalize);
+  const decision = decide(loadedTool.policy, normalizedParams);
 
   if (decision.decision === 'deny') {
     const durationMs = Date.now() - start;
@@ -106,9 +99,9 @@ export async function handleToolCall(
     };
   }
 
-  // At this point decision is narrowed to `allow`. `pending_approval` joins
-  // DecisionResult in slice 2 and will need its own branch above.
-  const adapterResult = await sendEmail(params as SendEmailParams, gmailSender);
+  // Decision is `allow`. `pending_approval` joins this union in slice 3 and
+  // will need its own branch above.
+  const adapterResult = await loadedTool.adapter(normalizedParams);
   const durationMs = Date.now() - start;
 
   if (adapterResult.status === 'failed') {
@@ -139,14 +132,12 @@ export async function handleToolCall(
     };
   }
 
-  const messageId = adapterResult.result.messageId;
-
   recordAuditEvent({
     tool: request.tool,
     request: { jsonRpcId: request.jsonRpcId, params: request.params },
     decision: 'allow',
     executed: true,
-    execution: { status: 'success', result: { messageId } },
+    execution: { status: 'success', result: adapterResult.result },
     denials: null,
     error: null,
     durationMs,
@@ -154,12 +145,12 @@ export async function handleToolCall(
 
   return {
     isError: false,
-    content: [{ type: 'text', text: `Email sent: ${messageId}` }],
+    content: [{ type: 'text', text: `${request.tool} executed` }],
     structuredContent: {
       tool: request.tool,
       decision: 'allow',
       executed: true,
-      messageId,
+      result: adapterResult.result,
     },
   };
 }

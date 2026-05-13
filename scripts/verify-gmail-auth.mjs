@@ -63,18 +63,21 @@ try {
     info.expiry_date ? new Date(info.expiry_date).toISOString() : '(unknown)',
   );
 
-  const hasSendScope = (info.scopes ?? []).some(
-    (s) => s === 'https://www.googleapis.com/auth/gmail.send' || s === 'https://mail.google.com/',
-  );
-  if (!hasSendScope) {
-    console.warn('WARN: gmail.send scope NOT in authorized scopes. Sending will fail.');
-    console.warn(
-      '      Re-run the OAuth Playground with `https://www.googleapis.com/auth/gmail.send` in the scope input.',
-    );
+  const grantedScopes = info.scopes ?? [];
+  // gmail.modify covers send, drafts, and threads.get (needed by draft_reply).
+  // gmail.send + gmail.compose is insufficient — threads.get requires read access.
+  const hasModifyScope =
+    grantedScopes.includes('https://mail.google.com/') ||
+    grantedScopes.includes('https://www.googleapis.com/auth/gmail.modify');
+
+  if (!hasModifyScope) {
+    console.warn('WARN: gmail.modify scope NOT authorized. draft_reply will fail at runtime.');
+    console.warn('      Re-run OAuth Playground with this scope:');
+    console.warn('      https://www.googleapis.com/auth/gmail.modify');
     process.exit(2);
   }
 
-  console.log('OK: gmail.send scope is authorized. Limen should be able to send.');
+  console.log('OK: gmail.modify scope authorized. Limen can send, draft, and read threads.');
 } catch (err) {
   console.error('FAIL:', err?.message ?? err);
   if (err?.response?.data) {

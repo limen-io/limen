@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { loadPoliciesFromDir, loadPolicy } from './loader';
+import { loadPolicy, loadPolicyForTool } from './loader';
 
 describe('loadPolicy', () => {
   // ─── Happy path ────────────────────────────────────────────────────────
@@ -19,11 +19,10 @@ rules:
           - blocked@example.com
 `;
 
-    const result = loadPolicy(yaml, 'send_email');
+    const result = loadPolicy(yaml);
 
     expect(result.status).toBe('ok');
     if (result.status === 'ok') {
-      expect(result.tool).toBe('send_email');
       expect(result.policy.version).toBe(1);
       expect(result.policy.rules).toHaveLength(1);
       expect(result.policy.rules[0]?.id).toBe('deny-blocked-recipient');
@@ -35,21 +34,19 @@ rules:
 
   // ─── Quarantine ────────────────────────────────────────────────────────
 
-  test('quarantines the tool when YAML is malformed', () => {
-    // Unclosed bracket — yaml parser will throw.
+  test('quarantines when YAML is malformed', () => {
     const yaml = `version: 1\nrules: [`;
 
-    const result = loadPolicy(yaml, 'send_email');
+    const result = loadPolicy(yaml);
 
     expect(result.status).toBe('quarantined');
     if (result.status === 'quarantined') {
-      expect(result.tool).toBe('send_email');
       expect(result.error.type).toBe('engine_error');
       expect(result.error.code).toBe('invalid_yaml');
     }
   });
 
-  test('quarantines the tool when version field is missing', () => {
+  test('quarantines when version field is missing', () => {
     const yaml = `
 rules:
   - id: some-rule
@@ -58,7 +55,7 @@ rules:
         in: ['blocked@example.com']
 `;
 
-    const result = loadPolicy(yaml, 'send_email');
+    const result = loadPolicy(yaml);
 
     expect(result.status).toBe('quarantined');
     if (result.status === 'quarantined') {
@@ -66,7 +63,7 @@ rules:
     }
   });
 
-  test('quarantines the tool when a rule is missing id', () => {
+  test('quarantines when a rule is missing id', () => {
     const yaml = `
 version: 1
 rules:
@@ -75,7 +72,7 @@ rules:
         in: ['blocked@example.com']
 `;
 
-    const result = loadPolicy(yaml, 'send_email');
+    const result = loadPolicy(yaml);
 
     expect(result.status).toBe('quarantined');
     if (result.status === 'quarantined') {
@@ -83,7 +80,7 @@ rules:
     }
   });
 
-  test('quarantines the tool when a rule uses an unknown operator (typo)', () => {
+  test('quarantines when a rule uses an unknown operator (typo)', () => {
     // 'not_inn' is a typo of 'not_in'. Without strict validation, zod would
     // silently drop the unknown key and the rule would never fire — exactly the
     // silent drop the spec forbids.
@@ -96,7 +93,7 @@ rules:
         not_inn: ['ok@example.com']
 `;
 
-    const result = loadPolicy(yaml, 'send_email');
+    const result = loadPolicy(yaml);
 
     expect(result.status).toBe('quarantined');
     if (result.status === 'quarantined') {
@@ -105,27 +102,61 @@ rules:
   });
 });
 
-describe('loadPoliciesFromDir', () => {
-  test('loads each *.yaml file as a separate tool, deriving tool name from filename', () => {
+describe('loadPolicyForTool', () => {
+  test('returns ok when <toolName>.yaml exists and parses', () => {
     const dir = mkdtempSync(join(tmpdir(), 'limen-policies-'));
     try {
       writeFileSync(
         join(dir, 'send_email.yaml'),
         `version: 1\nrules:\n  - id: deny-x\n    when:\n      to:\n        in: ['x@x.com']\n`,
       );
-      writeFileSync(join(dir, 'archive.yaml'), 'not valid yaml: [');
-      // Non-yaml file should be ignored.
-      writeFileSync(join(dir, 'README.md'), '# this should be ignored');
 
-      const results = loadPoliciesFromDir(dir);
+      const result = loadPolicyForTool('send_email', dir);
 
-      expect(results).toHaveLength(2);
+      expect(result.status).toBe('ok');
+      if (result.status === 'ok') {
+        expect(result.policy.rules[0]?.id).toBe('deny-x');
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 
-      const sendEmail = results.find((r) => r.tool === 'send_email');
-      expect(sendEmail?.status).toBe('ok');
+  test('returns missing when no policy file exists for the tool (ADR 0008)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'limen-policies-'));
+    try {
+      const result = loadPolicyForTool('unconfigured_tool', dir);
 
-      const archive = results.find((r) => r.tool === 'archive');
-      expect(archive?.status).toBe('quarantined');
+      expect(result.status).toBe('missing');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('quarantines when the file exists but YAML is invalid', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'limen-policies-'));
+    try {
+      writeFileSync(join(dir, 'broken.yaml'), 'not valid yaml: [');
+
+      const result = loadPolicyForTool('broken', dir);
+
+      expect(result.status).toBe('quarantined');
+      if (result.status === 'quarantined') {
+        expect(result.error.code).toBe('invalid_yaml');
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('accepts a .yml extension as a fallback', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'limen-policies-'));
+    try {
+      writeFileSync(join(dir, 'short_ext.yml'), `version: 1\nrules: []\n`);
+
+      const result = loadPolicyForTool('short_ext', dir);
+
+      expect(result.status).toBe('ok');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

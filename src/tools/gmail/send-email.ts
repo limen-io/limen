@@ -1,35 +1,48 @@
-import type { AdapterError } from '../../limen/types';
+import { z } from 'zod';
+import type { ToolDefinition } from '../types';
+import { encodeRfc2822 } from './encoding';
 
-export type SendEmailParams = {
+type SendEmailParams = {
   to: string[];
   subject: string;
   body: string;
 };
 
-export type AdapterResult =
-  | { status: 'success'; result: { messageId: string } }
-  | { status: 'failed'; error: AdapterError };
-
-// Injectable transport. Runtime wires this to the real googleapis client
-// (factory builds it from a refresh token in .env). Tests pass a fake.
-export type GmailSender = (params: SendEmailParams) => Promise<{ messageId: string }>;
-
-export async function sendEmail(
-  params: SendEmailParams,
-  gmailSender: GmailSender,
-): Promise<AdapterResult> {
-  try {
-    const { messageId } = await gmailSender(params);
-    return { status: 'success', result: { messageId } };
-  } catch (err) {
-    return {
-      status: 'failed',
-      error: {
-        type: 'adapter_error',
-        code: 'gmail_send_failed',
-        retryable: false,
-        detail: err instanceof Error ? err.message : String(err),
-      },
-    };
-  }
-}
+export const sendEmailTool: ToolDefinition = {
+  name: 'send_email',
+  description: 'Send an email via Gmail.',
+  inputSchema: {
+    to: z.array(z.string()),
+    subject: z.string(),
+    body: z.string(),
+  },
+  normalize: {
+    to: ['trim', 'lowercase'],
+  },
+  createAdapter:
+    ({ gmailClient, gmailFrom }) =>
+    async (params) => {
+      const { to, subject, body } = params as SendEmailParams;
+      try {
+        const raw = encodeRfc2822({ from: gmailFrom, to, subject }, body);
+        const response = await gmailClient.users.messages.send({
+          userId: 'me',
+          requestBody: { raw },
+        });
+        if (!response.data.id) {
+          throw new Error('Gmail API returned no message id');
+        }
+        return { status: 'success', result: { messageId: response.data.id } };
+      } catch (err) {
+        return {
+          status: 'failed',
+          error: {
+            type: 'adapter_error',
+            code: 'gmail_send_failed',
+            retryable: false,
+            detail: err instanceof Error ? err.message : String(err),
+          },
+        };
+      }
+    },
+};

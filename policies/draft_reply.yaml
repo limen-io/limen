@@ -1,0 +1,9 @@
+version: 1
+
+rules:
+  - id: deny-thread-outside-allowlist
+    description: Only allow drafts on threads explicitly approved.
+    when:
+      thread_id:
+        not_in:
+          - 19e22064c2ddb65f

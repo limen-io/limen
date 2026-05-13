@@ -7,7 +7,7 @@ import type {
   Scalar,
   Violation,
 } from '../limen/types';
-import type { LoadedTool } from './loader';
+import type { LoadedPolicy } from './loader';
 
 export type EvaluationResult = { decision: 'allow' } | { decision: 'deny'; denials: Denial[] };
 
@@ -99,11 +99,19 @@ export function evaluate(policy: Policy, params: Record<string, unknown>): Evalu
   return { decision: 'allow' };
 }
 
-// Top-level entry point used by the MCP handler. A quarantined Tool short-circuits
-// to `decision: error`; an ok Tool delegates to the pure evaluator.
-export function decide(loadedTool: LoadedTool, params: Record<string, unknown>): DecisionResult {
-  if (loadedTool.status === 'quarantined') {
-    return { decision: 'error', error: loadedTool.error };
+// Top-level entry point used by the MCP handler.
+//   quarantined → short-circuit to `decision: error`.
+//   missing     → no rules to evaluate; default-allow model (ADR 0001, 0008).
+//   ok          → delegate to the pure evaluator.
+export function decide(
+  loadedPolicy: LoadedPolicy,
+  params: Record<string, unknown>,
+): DecisionResult {
+  if (loadedPolicy.status === 'quarantined') {
+    return { decision: 'error', error: loadedPolicy.error };
   }
-  return evaluate(loadedTool.policy, params);
+  if (loadedPolicy.status === 'missing') {
+    return { decision: 'allow' };
+  }
+  return evaluate(loadedPolicy.policy, params);
 }

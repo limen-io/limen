@@ -70,9 +70,11 @@ export type EngineError = {
   detail: string;
 };
 
-// Outcome of running the Adapter when the Decision is `allow`.
-// `status` mirrors `executed`: success ↔ executed=true, failed ↔ executed=false.
-export type Execution =
+// Outcome of running an Adapter when the Decision is `allow`. The Adapter
+// contract returns this directly (ADR 0005); the AuditEvent.execution field
+// records the same value. `status` mirrors `executed`: success ↔ executed=true,
+// failed ↔ executed=false.
+export type AdapterResult =
   | { status: 'success'; result: Record<string, unknown> }
   | { status: 'failed'; error: AdapterError };
 
@@ -105,7 +107,7 @@ export type AuditEvent = AuditEventBase &
     | {
         decision: 'allow';
         executed: boolean;
-        execution: Execution;
+        execution: AdapterResult;
         denials: null;
         error: null;
       }
