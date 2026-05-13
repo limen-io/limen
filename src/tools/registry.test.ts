@@ -46,7 +46,7 @@ describe('loadTools', () => {
   test('builds a LoadedTool per definition with policy resolved from disk', () => {
     writeFileSync(
       join(dir, 'tool_a.yaml'),
-      `version: 1\nrules:\n  - id: deny-x\n    when:\n      x:\n        in: ['no']\n`,
+      `version: 1\nrules:\n  - id: deny-x\n    deny_when:\n      x:\n        in: ['no']\n`,
     );
     const adapter: Adapter = async () => ({ status: 'success', result: {} });
     const defs = [makeDef('tool_a', adapter)];
@@ -71,7 +71,7 @@ describe('loadTools', () => {
     writeFileSync(join(dir, 'broken_tool.yaml'), 'not valid yaml: [');
     writeFileSync(
       join(dir, 'healthy_tool.yaml'),
-      `version: 1\nrules:\n  - id: deny-x\n    when:\n      x:\n        in: ['no']\n`,
+      `version: 1\nrules:\n  - id: deny-x\n    deny_when:\n      x:\n        in: ['no']\n`,
     );
     const defs = [
       makeDef('broken_tool', async () => ({ status: 'success', result: {} })),

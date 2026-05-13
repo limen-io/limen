@@ -13,20 +13,19 @@ export type Predicate = {
   contains?: string;
 };
 
-// AND across field keys (every key in `when` must match for the Rule to fire).
-// AND across multiple predicates on the same field, when present.
+// AND across field keys (every key in `deny_when` must match for the Rule to
+// fire). AND across multiple predicates on the same field, when present.
 // OR across Rules is handled by the evaluator and is not encoded in the type.
 export type WhenClause = Record<string, Predicate>;
 
-// Every Rule under `rules:` is implicitly deny. The engine is deny-only
-// forever (strategic-decisions §14, first-slice.md decisão 2026-05-08).
-// If a second effect kind ever appears (e.g., `log` for audit-only), it
-// arrives as a backwards-compat optional field with default `deny` and a
-// bump of Policy.version.
+// Every Rule under `rules:` is implicitly deny; the condition lives under
+// `deny_when:` so the verb sits next to the condition it qualifies (ADR 0001).
+// `allow_when:` (positive sugar) is reserved for slice 3+ and will desugar
+// to `deny_when not X` at load time, leaving the engine deny-only forever.
 export type Rule = {
   id: string;
   description?: string;
-  when: WhenClause;
+  deny_when: WhenClause;
 };
 
 // Stored at policies/<tool>.yaml. The Tool name is implicit from the filename;

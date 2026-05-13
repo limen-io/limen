@@ -12,7 +12,7 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-blocked-recipient',
-          when: { to: { in: ['blocked@example.com'] } },
+          deny_when: { to: { in: ['blocked@example.com'] } },
         },
       ],
     };
@@ -30,7 +30,7 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-blocked-recipient',
-          when: { to: { in: ['blocked@example.com'] } },
+          deny_when: { to: { in: ['blocked@example.com'] } },
         },
       ],
     };
@@ -52,7 +52,7 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-outside-allowlist',
-          when: { to: { not_in: ['ok@example.com'] } },
+          deny_when: { to: { not_in: ['ok@example.com'] } },
         },
       ],
     };
@@ -75,7 +75,7 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-confidential-body',
-          when: { body: { contains: 'CONFIDENTIAL' } },
+          deny_when: { body: { contains: 'CONFIDENTIAL' } },
         },
       ],
     };
@@ -101,7 +101,7 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-blocked-recipient-with-public-announcement',
-          when: {
+          deny_when: {
             to: { in: ['blocked@example.com'] },
             subject: { in: ['public-announcement'] },
           },
@@ -125,7 +125,7 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-blocked-recipient-with-public-announcement',
-          when: {
+          deny_when: {
             to: { in: ['blocked@example.com'] },
             subject: { in: ['public-announcement'] },
           },
@@ -153,11 +153,11 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-blocked-recipient',
-          when: { to: { in: ['blocked@example.com'] } },
+          deny_when: { to: { in: ['blocked@example.com'] } },
         },
         {
           id: 'deny-public-announcement-subject',
-          when: { subject: { in: ['public-announcement'] } },
+          deny_when: { subject: { in: ['public-announcement'] } },
         },
       ],
     };
@@ -182,11 +182,11 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-blocked-recipient',
-          when: { to: { in: ['blocked@example.com'] } },
+          deny_when: { to: { in: ['blocked@example.com'] } },
         },
         {
           id: 'deny-public-announcement-subject',
-          when: { subject: { in: ['public-announcement'] } },
+          deny_when: { subject: { in: ['public-announcement'] } },
         },
       ],
     };
@@ -213,7 +213,7 @@ describe('evaluate', () => {
       rules: [
         {
           id: 'deny-outside-allowlist',
-          when: { to: { not_in: ['ok@example.com'] } },
+          deny_when: { to: { not_in: ['ok@example.com'] } },
         },
       ],
     };
@@ -270,7 +270,7 @@ describe('decide', () => {
         rules: [
           {
             id: 'deny-blocked-recipient',
-            when: { to: { in: ['blocked@example.com'] } },
+            deny_when: { to: { in: ['blocked@example.com'] } },
           },
         ],
       },

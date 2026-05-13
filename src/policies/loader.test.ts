@@ -13,7 +13,7 @@ version: 1
 rules:
   - id: deny-blocked-recipient
     description: Block recipients on the blocklist
-    when:
+    deny_when:
       to:
         in:
           - blocked@example.com
@@ -26,7 +26,7 @@ rules:
       expect(result.policy.version).toBe(1);
       expect(result.policy.rules).toHaveLength(1);
       expect(result.policy.rules[0]?.id).toBe('deny-blocked-recipient');
-      expect(result.policy.rules[0]?.when).toEqual({
+      expect(result.policy.rules[0]?.deny_when).toEqual({
         to: { in: ['blocked@example.com'] },
       });
     }
@@ -50,7 +50,7 @@ rules:
     const yaml = `
 rules:
   - id: some-rule
-    when:
+    deny_when:
       to:
         in: ['blocked@example.com']
 `;
@@ -67,7 +67,7 @@ rules:
     const yaml = `
 version: 1
 rules:
-  - when:
+  - deny_when:
       to:
         in: ['blocked@example.com']
 `;
@@ -88,7 +88,7 @@ rules:
 version: 1
 rules:
   - id: deny-outside-allowlist
-    when:
+    deny_when:
       to:
         not_inn: ['ok@example.com']
 `;
@@ -108,7 +108,7 @@ describe('loadPolicyForTool', () => {
     try {
       writeFileSync(
         join(dir, 'send_email.yaml'),
-        `version: 1\nrules:\n  - id: deny-x\n    when:\n      to:\n        in: ['x@x.com']\n`,
+        `version: 1\nrules:\n  - id: deny-x\n    deny_when:\n      to:\n        in: ['x@x.com']\n`,
       );
 
       const result = loadPolicyForTool('send_email', dir);

@@ -79,7 +79,7 @@ function evaluatePredicate(field: string, predicate: Predicate, value: unknown):
 // Returns a Denial if the Rule fires (every field's predicate matches, AND).
 function evaluateRule(rule: Rule, params: Record<string, unknown>): Denial | null {
   const collected: Violation[] = [];
-  for (const [field, predicate] of Object.entries(rule.when)) {
+  for (const [field, predicate] of Object.entries(rule.deny_when)) {
     const fieldViolations = evaluatePredicate(field, predicate, params[field]);
     if (fieldViolations.length === 0) return null; // AND across fields fails
     collected.push(...fieldViolations);

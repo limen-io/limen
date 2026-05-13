@@ -76,7 +76,7 @@ describe('handleToolCall', () => {
           rules: [
             {
               id: 'deny-blocked-recipient',
-              when: { to: { in: ['blocked@example.com'] } },
+              deny_when: { to: { in: ['blocked@example.com'] } },
             },
           ],
         },
@@ -232,7 +232,7 @@ describe('handleToolCall', () => {
           rules: [
             {
               id: 'deny-outside-allowlist',
-              when: { to: { not_in: ['ok@example.com'] } },
+              deny_when: { to: { not_in: ['ok@example.com'] } },
             },
           ],
         },

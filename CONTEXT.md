@@ -17,7 +17,7 @@ The configuration that restricts a Tool. One Policy per Tool, stored in `policie
 _Avoid_: ruleset, config
 
 **Rule**:
-A single deny clause inside a Policy, with `id`, `when`, and an optional `description`. Every Rule is implicitly deny; there is no `effect` field. A Policy contains many Rules.
+A single deny clause inside a Policy, with `id`, `deny_when`, and an optional `description`. Every Rule is implicitly deny; the condition lives under `deny_when:` so the verb sits next to the condition it qualifies. There is no `effect` field. A Policy contains many Rules. See ADR 0001 for the grammar rationale.
 _Avoid_: statement, clause
 
 **Policy engine**:

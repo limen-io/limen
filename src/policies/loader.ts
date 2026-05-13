@@ -28,11 +28,15 @@ const PredicateSchema = z
   })
   .strict();
 
+// `deny_when` (not `when`) keeps the verb next to the condition; see ADR 0001.
+// `allow_when` is reserved for slice 3+ and intentionally NOT accepted here:
+// strict() will quarantine any policy that uses it, which is the right signal
+// until the desugaring is implemented.
 const RuleSchema = z
   .object({
     id: z.string(),
     description: z.string().optional(),
-    when: z.record(z.string(), PredicateSchema),
+    deny_when: z.record(z.string(), PredicateSchema),
   })
   .strict();
 
